@@ -25,15 +25,25 @@ Design
 >
 >   - What sort of **accounting** with you need to keep track of for each
 >     **Process**?
+>       - we need to keep track of the pid, command, state, user, threshold, cpu
+>         usage, arrival time and start time
+>       - to do the above, we will create a struct for each process that holds
+>         all the information listed
 >
 >   - How will you compute the turnaround and response times for each
 >     **Process**?
+>       - we have to keep track of the time that all jobs arrive, start and
+>         finish
+>       - for each process, we will compute the turnaround time when the job
+>         finishes and the response time when the job starts
 >
 >   - What information do you need to store in the **Scheduler**?  How will it
 >     maintain a running and waiting queue?
 >
 >   - How will you compute the average turnaround and response times for the
 >     whole process queue?
+>       - have two variables that keeps track of the average turaround and
+>         repsonse times that we constantly update when a job starts or finishes
 
 Response.
 
@@ -42,8 +52,13 @@ Response.
 >    a consistent logging mechanism that includes timestamps.
 >
 >   - How will you go about logging information in your program?
+>       - we will use a macro to print the information below to the stdout
 >
 >   - What sort of information will you log?
+>       - for each loggin message, we will include a timestamp, description of
+>         the action, the pid and the command that's being run
+>       - when a process finishes, we will also log the turnaround and response
+>         time
 
 Response.
 
@@ -56,8 +71,16 @@ Response.
 >       since that creates two processes and you would only have direct control
 >       of `/bin/sh` rather than `command`
 >
+>       - we will be using fork, exec, wait and get pid of the new process from
+>         fork
+>
 >   - How will you implement preemption?  That is, how will you **stop** or
 >     **pause** a running process?
+
+        -UNSURE 
+        -we do not think we can simply send the SIGSTOP signal to the process
+          since it might not necessarily stop, but we are unsure how to approach
+          this
 >
 >   - How will you **resume** a process that has been preempted?
 >
@@ -76,6 +99,8 @@ Response.
 >   - How will you trigger your scheduler when a process dies?  What must
 >     happen when a process dies (consider both the **Scheduler** and the
 >     **Process**)?
+        -UNSURE
+        -the scheduler will have to take over
 >
 >   - How will you ensure your scheduler runs periodically after a time slice
 >     has expired?
@@ -89,6 +114,10 @@ Response.
 >    model.
 >
 >   - Which IPC mechanism will you use: named pipes or unix domain sockets?
+>       - we think unix domain sockets is the choice because it allows
+>         bi-directional communications where as named pipes only allow one
+>         direction communication which means we have to create two separate
+>         pipes
 >
 >   - How will you utilize this IPC mechanism?
 >
@@ -118,8 +147,12 @@ Response.
 >
 >   - How will MLFQ determine if a process needs to be lowered in priority?
 >     What information must be tracked and how it be updated?
+>       - have an external data structure that keeps track of the priority of
+>         all jobs
+>       - use something like a vector of linked list
 >
 >   - How will MFLQ determine if a priority boost is required?
+>       - after a certain number of time slices or cpu cycles, boost everything
 
 Response.
 
