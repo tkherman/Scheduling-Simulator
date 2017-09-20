@@ -71,20 +71,23 @@ Response.
 >       since that creates two processes and you would only have direct control
 >       of `/bin/sh` rather than `command`
 >
->       - we will be using fork, exec, wait and get pid of the new process from
->         fork
+>       - we will be using fork/exec/wait and will get the pid of the new 
+        process from fork()
 >
 >   - How will you implement preemption?  That is, how will you **stop** or
 >     **pause** a running process?
 
-        -UNSURE 
-        -we do not think we can simply send the SIGSTOP signal to the process
+>       -UNSURE 
+>       -we do not think we can simply send the SIGSTOP signal to the process
           since it might not necessarily stop, but we are unsure how to approach
           this
 >
 >   - How will you **resume** a process that has been preempted?
+>       -UNSURE
+>       -This depends entirely on how we preempt processes in the first place
 >
 >   - How will you **terminate** an active process?
+>       -UNSURE
 >
 >   - How will you gather statistics or accounting information about each
 >     process?  What will you store?
