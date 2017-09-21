@@ -79,8 +79,8 @@ Response.
 >       since that creates two processes and you would only have direct control
 >       of `/bin/sh` rather than `command`
 >
->       - we will be using fork, exec, wait and get pid of the new process from
->         fork
+>       - we will be using fork/exec/wait and will get the pid of the new 
+        process from fork()
 >
 >   - How will you implement preemption?  That is, how will you **stop** or
 >     **pause** a running process?
