@@ -6,8 +6,8 @@ This is the documentation for [Project 02] of [CSE.30341.FA17].
 Members
 -------
 
-1. Domer McDomerson (dmcdomer@nd.edu)
-2. Belle Fleur (bfleur@nd.edu)
+1. Herman Tong (ktong1@nd.edu)
+2. John McGuinness (jmcguin1@nd.edu)
 
 Design
 ------
@@ -39,6 +39,14 @@ Design
 >
 >   - What information do you need to store in the **Scheduler**?  How will it
 >     maintain a running and waiting queue?
+>       - queue for waiting jobs
+>       - FIFO
+>           - keep track of number of running jobs
+>       - Round Robin
+>           - a running queue
+>       - MLFQ
+>           - a vector of queues where the index of is the level and the queue
+>             is just like a queue in Round Robin
 >
 >   - How will you compute the average turnaround and response times for the
 >     whole process queue?
@@ -76,18 +84,18 @@ Response.
 >
 >   - How will you implement preemption?  That is, how will you **stop** or
 >     **pause** a running process?
-
-        -UNSURE 
-        -we do not think we can simply send the SIGSTOP signal to the process
-          since it might not necessarily stop, but we are unsure how to approach
-          this
+>       - we would send SIGSTOP signal to the process to pause it
 >
 >   - How will you **resume** a process that has been preempted?
+>       - to resume, we will send SIGCONT to the process
 >
 >   - How will you **terminate** an active process?
+>       - send a SIGTERM signal
 >
 >   - How will you gather statistics or accounting information about each
 >     process?  What will you store?
+>       - for the CPU usage, we will open the /proc/{pid}/stat file and parse it
+>         to calculate the %CPU usage
 >
 >       [Hint](https://stackoverflow.com/questions/16726779/how-do-i-get-the-total-cpu-usage-of-an-application-from-proc-pid-stat)
 
@@ -99,11 +107,14 @@ Response.
 >   - How will you trigger your scheduler when a process dies?  What must
 >     happen when a process dies (consider both the **Scheduler** and the
 >     **Process**)?
-        -UNSURE
-        -the scheduler will have to take over
+>       - use SIGCHLD to detect if a process dies, then use sigaction to call a
+>         handler that calls waitpid() to find out which process died
+>       - the process struct will be removed and the scheduler will have to
+>         decide what process will be run next
 >
 >   - How will you ensure your scheduler runs periodically after a time slice
 >     has expired?
+>       - this is answered in question 6
 >
 >       Note: you may wish to consider how your response to question 6 can help
 >       with this.
@@ -120,6 +131,8 @@ Response.
 >         pipes
 >
 >   - How will you utilize this IPC mechanism?
+>       - we can use this with poll() to detect if client is sending any new
+>         processes 
 >
 >       Note: you may wish to consider this response in light of your answer in
 >       question 6.
@@ -130,12 +143,21 @@ Response.
 >    from clients.
 >
 >   - How will you multiplex I/O and computation?
+>       - we will use poll() to check if there's anything to process in the UNIX
+>         domain sockets
+>       - when there's something, we will process such request. otherwise, we
+>         will continue with the scheduling duties
 >
 >   - How will you ensure that your I/O will not block indefinitely?
+>       - we will set a timeout for the poll() call so that it would not block
+>         indefinitely
 >
 >   - How will you allow events such as a child process dying interrupt your
 >     I/O, but block such an event from interrupting your normal scheduling
 >     functions?  Why would this be necessary?
+>       - when performing scheduling functions, we will use
+>         sigprocmask(SIG_BLOKC) to block and unblock when performing the
+>         schduling function
 
 Response.
 
@@ -144,12 +166,27 @@ Response.
 >
 >   - How will you perform preemption?  What happens to a process when it is
 >     prempted?
+>       - in the event loop, use the poll() timer to as the time slice timer so
+>           - the issue may be if client keeps sending jobs, the scheduler may
+>             be called repeatedly but that is ok i guess
+>           - perhaps we can keep track of when the scheduler is last called
+>       - when a process is preempted, it will be paused
+>           - for Round Robin, this process simply goes to the back of the
+>             waiting queue
+>           - for MLFQ, the process priority will be lowered then the scheduler
+>             will decide what will be running next depending on the priority
+>             table
 >
 >   - How will MLFQ determine if a process needs to be lowered in priority?
 >     What information must be tracked and how it be updated?
->       - have an external data structure that keeps track of the priority of
->         all jobs
->       - use something like a vector of linked list
+>       - we would have to determine if a process is I/O heavy
+>           - this means that we would have to keep track of the time the
+>             process spends in user mode as opposed to kernel mode.
+>           - using this we along with the time slices we can determine if the
+>             process is I/O heavy
+>       - if process is I/O heavy, we will keep it at high priority.
+>       - otherwise, we will lower the priority of a process after each time
+>         slice
 >
 >   - How will MFLQ determine if a priority boost is required?
 >       - after a certain number of time slices or cpu cycles, boost everything
