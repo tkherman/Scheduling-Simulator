@@ -66,11 +66,12 @@ int server(int ncpu, Policy p, int time_slice, string IPC_path) {
 				//Process here
 				string request = buff;
 
-				//Initialize Scheduler
-				//TODO
+				//TODO (this function returns a string - result of request)
 				handle_request(sched, request);
 			}
 		}
+		
+		//schedule
 
 	}
 
