@@ -131,5 +131,14 @@ int main(int argc, char *argv[]) {
 
         }
     }
-
+    
+    /* User calling program as client */
+    if (!is_server) {
+        client(client_request, command, IPC_path);
+        exit(EXIT_SUCCESS); // If client returns, it means request was sent successfully
+    }
+    /* User calling program as server */
+    //} else {
+    //    server(ncpu, p, time_slice, IPC_path);
+    //}
 }

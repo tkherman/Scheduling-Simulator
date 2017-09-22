@@ -17,9 +17,14 @@ using namespace std;
 #define debug(M) \
     cerr << "[DEBUG]" << __FILE__ << ":" << __LINE__ << ":" << __func__ << ":" << M << endl;
 
-#define log(M) \
+#define client_log(M) \
+    cout << M << endl;
+
+#define server_log(M) \
     cout << "[" << time(NULL) << "] " << M << endl;
 
+
+/* Custom struct and enum declaration */
 enum Request {
     ADD,
     STATUS,
@@ -57,9 +62,9 @@ struct Scheduler {
 
 
 
-int client(string option, string command);
+int client(Request client_request, string command, string IPC_path);
 
-int server(int ncpu, Policy p, int time_slice);
+int server(int ncpu, Policy p, int time_slice, string IPC_path);
 string handle_request(Scheduler &s, string request);
 void schedule(Scheduler &s);
 void sigchld_handler(int sig);
