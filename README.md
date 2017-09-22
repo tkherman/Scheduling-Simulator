@@ -187,6 +187,10 @@ Response.
 >       - if process is I/O heavy, we will keep it at high priority.
 >       - otherwise, we will lower the priority of a process after each time
 >         slice
+>       - we will use a variable threshold to keep track of how much alloted the
+>         process has used. this would involve keep track of the time the
+>         process spends on user mode and deduct that from the threshold.
+>       - once a process uses all its alloted time, it will be demoted
 >
 >   - How will MFLQ determine if a priority boost is required?
 >       - after a certain number of time slices or cpu cycles, boost everything
