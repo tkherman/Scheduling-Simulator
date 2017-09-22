@@ -15,8 +15,10 @@ int server(int ncpu, Policy p, int time_slice, string IPC_path) {
 	struct sockaddr_un local, remote;
 	int buff_len = 256;
 	char buff[buff_len];
+	
+	/* declare and fill scheduler */
 
-    /* Create socket */
+    /* Create socket */ //TODO - try and put this in a function
     if ((s = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
         perror("Failed to create a socket");
         exit(EXIT_FAILURE);
