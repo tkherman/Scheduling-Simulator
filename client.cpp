@@ -7,7 +7,7 @@
 #include <cstdio>
 #include <cstdlib>
 
-int client(Request client_request, string command, string IPC_path) {
+int client(string client_request, string IPC_path) {
     
     int s, t, len;
     struct sockaddr_un remote;
@@ -31,30 +31,31 @@ int client(Request client_request, string command, string IPC_path) {
     }
 
     client_log("Successfully connected to server...");
+    
+    /* Send request to server */
+    if (send(s, client_request.c_str(), client_request.size(), 0) == -1) {
+        perror("Error in client sending request...");
+        exit(EXIT_FAILURE);
+    }
 
-    /* Determine request to send to server */
-    string request_str;
-    switch (client_request) {
-        case ADD:
-            request_str = "add " + command;
-            break;
-        case STATUS:
-            request_str = "status";
-            break;
-        case RUNNING:
-            request_str = "running";
-            break;
-        case WAITING:
-            request_str = "waiting";
-            break;
-        case FLUSH:
-            request_str = "flush";
-            break;
+    /* Print out response from server */
+    bool done = false;
+    while (!done) {
+        if ((t = recv(s, str, BUFSIZ, 0)) > 0) {
+            str[t] = '\0';
+            cout << str << endl;
+            done = true;
+        } else {
+            if (t < 0) {
+                perror ("Error in receiving server response...");
+                exit(EXIT_FAILURE);
+            } else {
+                client_log("Request sent and handled");
+                done = true;
+            }
+        }
     }
 
 
-
-
-    
     return 0;
 }

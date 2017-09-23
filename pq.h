@@ -23,6 +23,9 @@ using namespace std;
 #define server_log(M) \
     cout << "[" << time(NULL) << "] " << M << endl;
 
+#define log(M) \
+    cout << M << endl;
+
 
 /* Custom struct and enum declaration */
 enum Request {
@@ -62,7 +65,7 @@ struct Scheduler {
 
 
 
-int client(Request client_request, string command, string IPC_path);
+int client(string client_request, string IPC_path);
 
 int server(int ncpu, Policy p, int time_slice, string IPC_path);
 string handle_request(Scheduler &s, string request);

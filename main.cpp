@@ -34,11 +34,10 @@ void usage(string program, int status) {
 int main(int argc, char *argv[]) {
     
     /* Initialize parameter to default */
-    string IPC_path = "communicatation_socket";
+    string IPC_path = "/tmp/communicatation_socket";
 
     /* Client side parameter */
-    Request client_request;
-    string command;
+    string client_request;
 
     /* Server side parameter */
     int ncpus = 1;
@@ -67,8 +66,7 @@ int main(int argc, char *argv[]) {
 
         } else if (!arg.compare("add")) {
             if (argind < argc) {
-                client_request = ADD;
-                command = argv[argind++];
+                client_request = arg + " " + argv[argind++];
                 is_server = false;
             } else {
                 log("Error: add requires a COMMAND");
@@ -76,19 +74,19 @@ int main(int argc, char *argv[]) {
             }
 
         } else if (!arg.compare("status")) {
-            client_request = STATUS;
+            client_request = "status";
             is_server = false;
 
         } else if (!arg.compare("running")) {
-            client_request = RUNNING;
+            client_request = "running";
             is_server = false;
 
         } else if (!arg.compare("waiting")) {
-            client_request = WAITING;
+            client_request = "waiting";
             is_server = false;
 
         } else if (!arg.compare("flush")) {
-            client_request = FLUSH;
+            client_request = "flush";
             is_server = false;
 
         } else if (!arg.compare("-n")) {
@@ -134,11 +132,10 @@ int main(int argc, char *argv[]) {
     
     /* User calling program as client */
     if (!is_server) {
-        client(client_request, command, IPC_path);
+        client(client_request, IPC_path);
         exit(EXIT_SUCCESS); // If client returns, it means request was sent successfully
-    }
     /* User calling program as server */
-    //} else {
-    //    server(ncpu, p, time_slice, IPC_path);
-    //}
+    } else {
+        server(ncpus, policy, time_slice, IPC_path);
+    }
 }
