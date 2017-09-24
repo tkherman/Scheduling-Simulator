@@ -101,6 +101,7 @@ int server(int ncpu, Policy p, int time_slice, string IPC_path) {
         }
 
         /* Call scheduler after polling */
+        schedule(int time_slice);
         server_log("calling scheduler");
 	}
 

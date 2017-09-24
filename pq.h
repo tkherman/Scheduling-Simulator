@@ -84,7 +84,7 @@ int client(string client_request, string IPC_path);
 
 int server(int ncpu, Policy p, int time_slice, string IPC_path);
 string handle_request(string request);
-void schedule();
+void schedule(int time_slice);
 void sigchld_handler(int sig);
 void free_scheduler();
 
