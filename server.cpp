@@ -1,6 +1,7 @@
 /* server.cpp */
 
-//This code borrows from the Beej Guide to Network Programming
+/* This code borrows from the Beej Guide to Network Programming and
+ * and IBM Knowledge center */
 
 #include "pq.h"
 
@@ -55,6 +56,12 @@ int server(int ncpu, Policy p, int time_slice, string IPC_path) {
     struct sockaddr_un remote;
     char buff[BUFSIZ];
 
+    /* Initialize schduler struct */
+    //s_struct = new Scheduler(ncpu, p);
+    s_struct->ncpu = ncpu;
+    s_struct->policy = p;
+   
+    /* Create unix domain socket for listening */
     s = set_up_socket(remote, IPC_path);
 
 	server_log("Waiting for connections from client...");
@@ -79,27 +86,24 @@ int server(int ncpu, Policy p, int time_slice, string IPC_path) {
                 perror("Failed to accept");
                 exit(EXIT_FAILURE);
             }
-            server_log("Connected with a client...");
+            server_log("Taking request from a client...");
             
             int bytes_recvd = recv(s2, buff, BUFSIZ, 0);
             if (bytes_recvd < 0) {
                 perror("Server error receiving request");
             }
             
-            cout << buff << endl;
+            cout <<s_struct->ncpu << endl;
             //string response = handle_request(buff);
+            string response = "got it"; 
 
-            if (send(s2, "got it", 7, 0) < 0) {
+            if (send(s2, response.c_str(), response.size(), 0) < 0) {
                 perror("Server error sending response back to client");
             }
         }
 
         /* Call scheduler after polling */
         server_log("calling scheduler");
-
-
-        //TODO (this function returns a string - result of request)
-        //handle_request(sched, request);
 	}
 
     return 0;

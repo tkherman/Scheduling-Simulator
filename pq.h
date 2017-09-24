@@ -28,14 +28,6 @@ using namespace std;
 
 
 /* Custom struct and enum declaration */
-enum Request {
-    ADD,
-    STATUS,
-    RUNNING,
-    WAITING,
-    FLUSH
-};
-
 struct Process {
     pid_t   pid;
     string  command;
@@ -45,7 +37,17 @@ struct Process {
     float   cpu_usage;
     time_t  arrival;
     time_t  start;
-    int     priority;
+
+    Process(string cmd) {
+        this->pid = 0;
+        this->command = cmd;
+        this->state = "sleeping";
+        this->user_time = 0;
+        this->threshold = 0;
+        this->cpu_usage = 0.0;
+        this->arrival = time(NULL);
+        this->start = 0;
+    };
 };
 
 enum Policy {
@@ -55,22 +57,36 @@ enum Policy {
 };
 
 struct Scheduler {
-    queue<Process>          waiting_jobs;
-    queue<Process>          running_jobs;
-    vector<list<Process>>   levels;
+    // use deque as queue, push_front() for push, pop_back() for pop
+    deque<Process*>         waiting_jobs; 
+    deque<Process*>         running_jobs;
+    vector<list<Process*>>  levels;
     Policy                  policy;
     int                     ncpu;
     time_t                  last_called;
+    float                   average_turnaround;
+    float                   average_response;
+
+    Scheduler() {
+        this->policy = FIFO;
+        this->ncpu = 1;
+        this->last_called = time(NULL);
+        this->average_turnaround = 0.0;
+        this->average_response = 0.0;
+    }
+
 };
 
+extern struct Scheduler *s_struct = new Scheduler();
 
 
 int client(string client_request, string IPC_path);
 
 int server(int ncpu, Policy p, int time_slice, string IPC_path);
-string handle_request(Scheduler &s, string request);
-void schedule(Scheduler &s);
+string handle_request(string request);
+void schedule();
 void sigchld_handler(int sig);
+void free_scheduler();
 
 
 #endif
