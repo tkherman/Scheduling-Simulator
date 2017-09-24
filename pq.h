@@ -77,7 +77,7 @@ struct Scheduler {
 
 };
 
-extern struct Scheduler *s_struct = new Scheduler();
+extern struct Scheduler *s_struct;
 
 
 int client(string client_request, string IPC_path);

@@ -79,6 +79,8 @@ string status_check() {
     rs << endl;
     rs << "Running Queue:" << endl;
     rs << running_jobs();
+    rs << endl;
+    rs << "Waiting Queue:" << endl;
     rs << waiting_jobs();
 
     return rs.str();

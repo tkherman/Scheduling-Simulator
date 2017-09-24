@@ -8,7 +8,7 @@ TARGETS=	pq
 
 all: $(TARGETS)
 
-pq: main.o client.o server.o #handle_request.o
+pq: main.o client.o server.o handle_request.o
 	@echo Linking pq...
 	@$(LD) $(LDFLAGS) -o $@ $^
 
@@ -24,9 +24,9 @@ server.o: server.cpp pq.h
 	@echo Compiling server.o...
 	@$(CC) $(CFLAGS) -o $@ -c $<
 
-#handle_request.o: handle_request.cpp pq.h
-#	@echo Compiling handle_request.o...
-#	@$(CC) $(CFLAGS) -o $@ -c $<
+handle_request.o: handle_request.cpp pq.h
+	@echo Compiling handle_request.o...
+	@$(CC) $(CFLAGS) -o $@ -c $<
 
 clean:
 	@echo Cleaning up

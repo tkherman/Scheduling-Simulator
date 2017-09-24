@@ -57,7 +57,6 @@ int server(int ncpu, Policy p, int time_slice, string IPC_path) {
     char buff[BUFSIZ];
 
     /* Initialize schduler struct */
-    //s_struct = new Scheduler(ncpu, p);
     s_struct->ncpu = ncpu;
     s_struct->policy = p;
    
@@ -93,9 +92,8 @@ int server(int ncpu, Policy p, int time_slice, string IPC_path) {
                 perror("Server error receiving request");
             }
             
-            cout <<s_struct->ncpu << endl;
-            //string response = handle_request(buff);
-            string response = "got it"; 
+            cout << buff << endl;
+            string response = handle_request(string(buff));
 
             if (send(s2, response.c_str(), response.size(), 0) < 0) {
                 perror("Server error sending response back to client");

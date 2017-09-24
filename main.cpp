@@ -5,6 +5,9 @@
 #include <cstdlib>
 
 
+/* Declare global Scheduler struct */
+struct Scheduler *s_struct = new Scheduler();
+
 /* Usage function that prints out usage guide and exit according to status */
 void usage(string program, int status) {
     cerr << "Usage: " << program << "[options]" << endl;
