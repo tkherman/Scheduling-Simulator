@@ -49,7 +49,7 @@ int set_up_socket(sockaddr_un &remote, string IPC_path) {
 /* This is the main event loop for the server. It sets up a IPC using unix
  * domain socket and continuous listen to potential request when calling
  * scheduler to handle the scheduling of the jobs */
-int server(int ncpu, Policy p, int time_slice, string IPC_path) {
+int server(int ncpu, Policy p, uint64_t time_slice, string IPC_path) {
     
     int s, s2;
     socklen_t t;
@@ -71,7 +71,7 @@ int server(int ncpu, Policy p, int time_slice, string IPC_path) {
 	/* Loop to wait for connections */
 	while(1) {
 		
-        int poll_result = poll(&pfds, 1, time_slice);
+        int poll_result = poll(&pfds, 1, time_slice/1000);
         
         /* Check if poll call failed */
         if (poll_result < 0) {
@@ -94,6 +94,7 @@ int server(int ncpu, Policy p, int time_slice, string IPC_path) {
             
             cout << buff << endl;
             string response = handle_request(string(buff));
+			cout << response << endl;
 
             if (send(s2, response.c_str(), response.size(), 0) < 0) {
                 perror("Server error sending response back to client");
@@ -101,7 +102,7 @@ int server(int ncpu, Policy p, int time_slice, string IPC_path) {
         }
 
         /* Call scheduler after polling */
-        schedule(int time_slice);
+        schedule(time_slice);
         server_log("calling scheduler");
 	}
 

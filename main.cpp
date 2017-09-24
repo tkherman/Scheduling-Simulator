@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
 
     /* Server side parameter */
     int ncpus = 1;
-    int time_slice = 1000;
+    uint64_t time_slice = 1000000;
     Policy policy = FIFO;
     bool is_server = true;
 

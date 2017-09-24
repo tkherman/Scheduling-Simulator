@@ -8,12 +8,20 @@ TARGETS=	pq
 
 all: $(TARGETS)
 
-pq: main.o client.o server.o handle_request.o
+pq: main.o client.o server.o schedule.o time.o handle_request.o
 	@echo Linking pq...
 	@$(LD) $(LDFLAGS) -o $@ $^
 
 main.o: main.cpp pq.h
 	@echo Compiling main.o...
+	@$(CC) $(CFLAGS) -o $@ -c $<
+
+time.o: time.cpp pq.h
+	@echo Compiling time.o...
+	@$(CC) $(CFLAGS) -o $@ -c $<
+
+schedule.o: schedule.cpp pq.h
+	@echo Compiling schedule.o...
 	@$(CC) $(CFLAGS) -o $@ -c $<
 
 client.o: client.cpp pq.h

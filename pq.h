@@ -26,6 +26,8 @@ using namespace std;
 #define log(M) \
     cout << M << endl;
 
+/* function to get current time in microseconds */
+uint64_t getCurrentTime();
 
 /* Custom struct and enum declaration */
 struct Process {
@@ -45,7 +47,7 @@ struct Process {
         this->user_time = 0;
         this->threshold = 0;
         this->cpu_usage = 0.0;
-        this->arrival = time(NULL);
+        this->arrival = getCurrentTime();
         this->start = 0;
     };
 };
@@ -63,14 +65,14 @@ struct Scheduler {
     vector<list<Process*>>  levels;
     Policy                  policy;
     int                     ncpu;
-    time_t                  last_called;
+    uint64_t                last_called;
     float                   average_turnaround;
     float                   average_response;
 
     Scheduler() {
         this->policy = FIFO;
         this->ncpu = 1;
-        this->last_called = time(NULL);
+        this->last_called = getCurrentTime();
         this->average_turnaround = 0.0;
         this->average_response = 0.0;
     }
@@ -81,10 +83,9 @@ extern struct Scheduler *s_struct;
 
 
 int client(string client_request, string IPC_path);
-
-int server(int ncpu, Policy p, int time_slice, string IPC_path);
+int server(int ncpu, Policy p, uint64_t time_slice, string IPC_path);
 string handle_request(string request);
-void schedule(int time_slice);
+void schedule(uint64_t time_slice);
 void sigchld_handler(int sig);
 void free_scheduler();
 
