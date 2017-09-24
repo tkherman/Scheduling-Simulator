@@ -87,6 +87,7 @@ int server(int ncpu, Policy p, uint64_t time_slice, string IPC_path) {
             }
             server_log("Taking request from a client...");
             
+			memset(&buff, 0, sizeof(buff));
             int bytes_recvd = recv(s2, buff, BUFSIZ, 0);
             if (bytes_recvd < 0) {
                 perror("Server error receiving request");
