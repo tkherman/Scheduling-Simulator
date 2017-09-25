@@ -3,6 +3,7 @@
 #include "pq.h"
 #include <unistd.h>
 #include <cstring>
+#include <signal.h>
 
 
 pid_t runProcess(Process * next) {
@@ -73,8 +74,35 @@ void fifo() {
 }
 
 void rdrb() {
-	debug("RDRB");
+
+	while(s_struct->running_jobs.size()) {
+		Process * to_stop = s_struct->running_jobs.back();
+		s_struct->waiting_jobs.push_front(to_stop);
+		s_struct->running_jobs.pop_back();
+		
+		/* actually stop the process */
+		kill(to_stop->pid, SIGSTOP);
+	}
+	
+	while(int(s_struct->running_jobs.size()) < s_struct->ncpu) {
+		
+		if(s_struct->waiting_jobs.empty())
+			break;
+
+		/* get next job to add */
+		Process * next = s_struct->waiting_jobs.back();
+		s_struct->waiting_jobs.pop_back();
+		
+		if(next->pid == 0) {
+			runProcess(next);
+			//TODO update info about process
+		} else {
+			kill(next->pid, SIGCONT);
+			s_struct->running_jobs.push_front(next);
+		}
+	}
 }
+
 
 void mlfq() {
 	debug("MLFQ");
