@@ -70,6 +70,8 @@ int main(int argc, char *argv[]) {
         } else if (!arg.compare("add")) {
             if (argind < argc) {
                 client_request = arg + " " + argv[argind++];
+                while (argind < argc)
+                    client_request += argv[argind++];
                 is_server = false;
             } else {
                 log("Error: add requires a COMMAND");

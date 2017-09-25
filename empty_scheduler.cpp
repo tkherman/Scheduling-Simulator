@@ -14,9 +14,6 @@ void empty_scheduler() {
             if (kill(p->pid, SIGTERM) == -1)
                 perror("Error terminating process");
         }
-
-        /* Free the process struct */
-        delete p;
     }
 
     for (auto &p : s_struct->running_jobs) {
@@ -26,9 +23,6 @@ void empty_scheduler() {
             if (kill(p->pid, SIGTERM) == -1)
                 perror("Error terminating process");
         }
-
-        /* Free the process struct */
-        delete p;
     }
     
     /* Clear levels vector */
