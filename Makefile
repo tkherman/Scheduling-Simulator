@@ -44,7 +44,6 @@ empty_scheduler.o: empty_scheduler.cpp pq.h
 	@echo Compiling empty_scheduler.o...
 	@$(CC) $(CFLAGS) -o $@ -c $<
 
-
 clean:
 	@echo Cleaning up
 	@rm -f $(TARGETS) *.o

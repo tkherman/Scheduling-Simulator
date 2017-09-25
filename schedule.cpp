@@ -5,7 +5,7 @@
 #include <cstring>
 
 
-int runProcess(Process * next) {
+pid_t runProcess(Process * next) {
 	/* fork a new process */
 	pid_t id = fork();
 	
@@ -51,6 +51,8 @@ int runProcess(Process * next) {
 		server_log("Fork failed");
 		exit(EXIT_FAILURE); //TODO figure out how to deallocate
 	}
+
+    return -1;
 
 }
 

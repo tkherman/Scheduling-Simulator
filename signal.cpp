@@ -3,6 +3,8 @@
 #include "pq.h"
 
 #include <cstdlib>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 
 /* This signal handler detects if a running child process has died.
@@ -44,7 +46,11 @@ void sigchld_handler(int sig) {
         
         /* Free the Process struct */
         for (auto it = s_struct->running_jobs.begin(); it != s_struct->running_jobs.end(); it++) {
-            if ((*it).pid == p) s_struct->running_jobs.erase(it);
+            if ((*it)->pid == p) {
+                s_struct->running_jobs.erase(it);
+                break;
+            }
+            
         }
         delete current_p;
     }
