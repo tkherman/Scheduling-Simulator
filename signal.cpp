@@ -43,6 +43,9 @@ void sigchld_handler(int sig) {
         s_struct->average_response = total_r / s_struct->process_finished;
         
         /* Free the Process struct */
+        for (auto it = s_struct->running_jobs.begin(); it != s_struct->running_jobs.end(); it++) {
+            if ((*it).pid == p) s_struct->running_jobs.erase(it);
+        }
         delete current_p;
     }
     
