@@ -107,8 +107,19 @@ int server(int ncpu, Policy p, uint64_t time_slice, string IPC_path) {
             }
         }
 
-        /* Call scheduler after polling */
+        /* Call scheduler after polling, block SIGCHLD when calling schedule */
+        sigset_t mask;
+        sigemptyset(&mask);
+        sigaddset(&mask, SIGCHLD);
+        
+        if (sigprocmask(SIG_BLOCK, &mask, NULL) < 0) {
+            perror("Error in sigprocmask");
+        }
         schedule(time_slice);
+        if (sigprocmask(SIG_UNBLOCK, &mask, NULL) < 0) {
+            perror("Error in sigprocmask");
+        }
+
         server_log("calling scheduler");
 	}
 

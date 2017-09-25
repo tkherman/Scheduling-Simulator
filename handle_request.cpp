@@ -4,6 +4,7 @@
 
 #include <sstream>
 #include <iomanip>
+#include <csignal>
 
 /* Allocate a new Process struct and fill in initialize info */
 string add_job(string command){
@@ -91,8 +92,8 @@ string flush_jobs() {
 
     rs << "Flushed " << s_struct->running_jobs.size() << " running and ";
     rs << s_struct->waiting_jobs.size() << " waiting processes" << endl;
-
-    //free_scheduler();
+    
+    empty_scheduler();
 
     return rs.str();
 }

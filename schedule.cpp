@@ -6,17 +6,13 @@
 #include <signal.h>
 
 
-pid_t runProcess(Process * next) {
+pid_t run_process(Process * next) {
 	/* fork a new process */
 	pid_t id = fork();
 	
 	if(id > 0) {
-		//TODO check if waiting happens here
 
-		/* add job to running jobs deque */
-		next->state = "running"; //TODO check if this is wrong
-		next->pid = id;
-		s_struct->running_jobs.push_front(next);
+
 		return id;
 
 	} else if (id == 0) { //child process
@@ -50,7 +46,7 @@ pid_t runProcess(Process * next) {
 		
 	} else { // fork failed
 		server_log("Fork failed");
-		exit(EXIT_FAILURE); //TODO figure out how to deallocate
+        return -1;
 	}
 
     return -1;
@@ -65,11 +61,24 @@ void fifo() {
 		if(s_struct->waiting_jobs.empty())
 			break;
 
-		/* get next job to add */
+		/* Access the struct Process for the next job to run */
 		Process * next = s_struct->waiting_jobs.back();
 		s_struct->waiting_jobs.pop_back();
 		
-		runProcess(next);
+        /* Create a new process */
+		pid_t new_pid = run_process(next);
+
+		/* If new_pid is -1, handle error. Else, update Process struct */
+        if (new_pid == -1) {
+            continue;
+        }
+
+        next->state = "running";
+		next->pid = new_pid;
+        next->start = getCurrentTime();
+        // get usage
+
+		s_struct->running_jobs.push_front(next);
 	}
 }
 
