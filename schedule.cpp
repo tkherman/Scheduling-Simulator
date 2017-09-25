@@ -103,10 +103,18 @@ void rdrb() {
 		s_struct->waiting_jobs.pop_back();
 		
 		if(next->pid == 0) {
-			runProcess(next);
+			pid_t npid = run_process(next);
+			if (npid < 0) { 
+				continue;
+				//TODO handle error
+			}
+			next->pid = npid;
+        	next->start = getCurrentTime();
+			s_struct->running_jobs.push_front(next);
 			//TODO update info about process
 		} else {
 			kill(next->pid, SIGCONT);
+			debug("resumed");
 			s_struct->running_jobs.push_front(next);
 		}
 	}
