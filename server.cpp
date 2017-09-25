@@ -11,6 +11,7 @@
 #include <poll.h>
 #include <cstdio>
 #include <cstdlib>
+#include <csignal>
 
 
 /* This function sets up a listen socket and returns to main server function */
@@ -51,6 +52,10 @@ int set_up_socket(sockaddr_un &remote, string IPC_path) {
  * scheduler to handle the scheduling of the jobs */
 int server(int ncpu, Policy p, uint64_t time_slice, string IPC_path) {
     
+    /* Signal handling */
+    signal(SIGINT, sigint_handler);
+    signal(SIGCHLD, sigchld_handler);
+
     int s, s2;
     socklen_t t;
     struct sockaddr_un remote;

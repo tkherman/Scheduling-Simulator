@@ -8,7 +8,7 @@ TARGETS=	pq
 
 all: $(TARGETS)
 
-pq: main.o client.o server.o schedule.o time.o handle_request.o
+pq: main.o client.o server.o schedule.o time.o handle_request.o signal.o empty_scheduler.o
 	@echo Linking pq...
 	@$(LD) $(LDFLAGS) -o $@ $^
 
@@ -35,6 +35,15 @@ server.o: server.cpp pq.h
 handle_request.o: handle_request.cpp pq.h
 	@echo Compiling handle_request.o...
 	@$(CC) $(CFLAGS) -o $@ -c $<
+
+signal.o: signal.cpp pq.h
+	@echo Compiling signal.o...
+	@$(CC) $(CFLAGS) -o $@ -c $<
+
+empty_scheduler.o: empty_scheduler.cpp pq.h
+	@echo Compiling empty_scheduler.o...
+	@$(CC) $(CFLAGS) -o $@ -c $<
+
 
 clean:
 	@echo Cleaning up

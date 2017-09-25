@@ -66,15 +66,17 @@ struct Scheduler {
     Policy                  policy;
     int                     ncpu;
     uint64_t                last_called;
-    float                   average_turnaround;
-    float                   average_response;
+    int                     process_finished;
+    uint64_t                average_turnaround;
+    uint64_t                average_response;
 
     Scheduler() {
         this->policy = FIFO;
         this->ncpu = 1;
         this->last_called = getCurrentTime();
-        this->average_turnaround = 0.0;
-        this->average_response = 0.0;
+        this->process_finished = 0;
+        this->average_turnaround = 0;
+        this->average_response = 0;
     }
 
 };
@@ -87,7 +89,7 @@ int server(int ncpu, Policy p, uint64_t time_slice, string IPC_path);
 string handle_request(string request);
 void schedule(uint64_t time_slice);
 void sigchld_handler(int sig);
-void free_scheduler();
-
+void sigint_handler(int sig);
+void empty_scheduler();
 
 #endif
