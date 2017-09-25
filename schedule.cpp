@@ -1,9 +1,66 @@
 /* schedule.cpp */
 
 #include "pq.h"
+#include <unistd.h>
+#include <cstring>
 
 void fifo() {
-	debug("FIFO");
+	debug("entered fifo scheduler");
+	
+	while(int(s_struct->running_jobs.size()) < s_struct->ncpu) {
+		
+		if(s_struct->waiting_jobs.empty())
+			break;
+
+		/* get next job to add */
+		Process * next = s_struct->waiting_jobs.back();
+		s_struct->waiting_jobs.pop_back();
+		
+		/* fork a new process */
+		pid_t id = fork();
+		
+		if(id > 0) {
+			//TODO check if waiting happens here
+
+			/* add job to running jobs deque */
+			next->state = "running"; //TODO check if this is wrong
+			next->pid = id;
+			s_struct->running_jobs.push_front(next);
+
+		} else if (id == 0) { //child process
+			/* manually create non-const c string */
+			char cmd[next->command.size()+1];
+			size_t length = next->command.copy(cmd, next->command.size());
+			cmd[length] = '\0';
+
+			/* parse command string */
+			char * arglist[20];
+			char * arg = strtok(cmd, " ");
+			int k=0;
+			while(arg != NULL) {
+				arglist[k++] = arg;
+				arg = strtok(NULL, " ");
+				debug(arg);
+			}
+			arglist[k] = NULL;
+			
+
+			/* execute the command */
+			server_log("about to exec");
+			cout << arglist[0] << endl;
+			if(execv(arglist[0], arglist) < 0) {
+				server_log("exec failed");
+				//TODO check what do do on error (i.e. with deallocation)
+				_exit(EXIT_FAILURE);
+			}
+			debug("here");
+
+			
+		} else { // fork failed
+			server_log("Fork failed");
+			exit(EXIT_FAILURE); //TODO figure out how to deallocate
+		}
+	}
 }
 
 void rdrb() {
