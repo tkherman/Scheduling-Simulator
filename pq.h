@@ -69,6 +69,7 @@ struct Scheduler {
     int                     ncpu;
 	int						MAX_LEVELS;
     uint64_t                last_called;
+	uint64_t				default_threshold;
     int                     process_finished;
     float                   average_turnaround;
     float                   average_response;

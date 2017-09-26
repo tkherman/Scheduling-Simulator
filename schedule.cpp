@@ -201,7 +201,7 @@ void mlfq() {
 	}
 
 	/* move new processes to running */
-	for(int k-0; k<s_struct->MAX_LEVELS; k++) {
+	for(int k=0; k<s_struct->MAX_LEVELS; k++) {
 		while(!s_struct->levels[k].empty() 
 				&& s_struct->running_jobs.size() < s_struct->ncpu) {
 			
