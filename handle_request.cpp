@@ -12,6 +12,8 @@ string add_job(string command){
     s_struct->waiting_jobs.push_front(new_p);
 
     string response = "Added process: " + command;
+    server_log(response);
+
     return response;
 }
 

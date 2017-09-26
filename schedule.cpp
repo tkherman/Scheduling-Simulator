@@ -2,6 +2,7 @@
 
 #include "pq.h"
 #include <unistd.h>
+#include <fcntl.h>
 #include <cstring>
 #include <signal.h>
 #include <fstream>
@@ -31,11 +32,12 @@ pid_t run_process(Process * next) {
 			arg = strtok(NULL, " ");
 		}
 		arglist[k] = NULL;
-		
+	    
+        /* Redirect output */
+        int fd = open("/dev/null", O_WRONLY);
+        dup2(fd, 1);
 
 		/* Execute the command */
-		server_log("about to exec");
-		cout << arglist[0] << endl;
 		if(execvp(arglist[0], arglist) < 0) {
 			server_log("Error: exec failed");
 			return -1;
@@ -65,6 +67,8 @@ void fifo() {
         /* Create a new process */
 		pid_t new_pid = run_process(next);
 
+        server_log("Started process " << new_pid << " " << next->command);
+
 		/* If new_pid is -1, delete the process struct
          * Else, update Process struct */
         if (new_pid == -1) {
@@ -72,57 +76,94 @@ void fifo() {
             continue;
         }
 
-        next->state = "running";
+        /* Update process' stat */
+        Process_Stat ps = get_process_stat(new_pid);
+
+        next->state = ps.state;
 		next->pid = new_pid;
         next->start = getCurrentTime();
-        next->cpu_usage = get_cpu_usage(new_pid);
+        next->cpu_usage = ps.cpu_usage;
 
 		s_struct->running_jobs.push_front(next);
 	}
 
-    /* Update usage for jobs in running */
+    /* Update process stat for jobs in running */
     for (auto &p : s_struct->running_jobs) {
-        p->cpu_usage = get_cpu_usage(p->pid);
+        Process_Stat ps = get_process_stat(p->pid);
+        p->cpu_usage = ps.cpu_usage;
+        p->state = ps.state;
     }
 
 }
 
 void rdrb() {
-
+    
+    /* Move a process from running queue to waiting queue */
 	while(s_struct->running_jobs.size()) {
 		Process * to_stop = s_struct->running_jobs.back();
 		s_struct->waiting_jobs.push_front(to_stop);
 		s_struct->running_jobs.pop_back();
 		
-		/* actually stop the process */
+		/* Signal process to stop */
 		kill(to_stop->pid, SIGSTOP);
 	}
 	
+    /* Move process from waiting queue to running queue */
 	while(int(s_struct->running_jobs.size()) < s_struct->ncpu) {
 		
 		if(s_struct->waiting_jobs.empty())
 			break;
 
-		/* get next job to add */
+		/* Get the next job to move */
 		Process * next = s_struct->waiting_jobs.back();
 		s_struct->waiting_jobs.pop_back();
-		
+	    
+        /* Start new process */
 		if(next->pid == 0) {
-			pid_t npid = run_process(next);
-			if (npid < 0) { 
-				continue;
-				//TODO handle error
+			
+            pid_t npid = run_process(next);
+			
+            if (npid < 0) { 
+				delete next;
+                continue;
 			}
-			next->pid = npid;
+
+            server_log("Started process " << npid << " " << next->command);
+
+            /* Update process stat */
+            Process_Stat ps = get_process_stat(npid);
+
+			next->state = ps.state;
+            next->pid = npid;
         	next->start = getCurrentTime();
-			s_struct->running_jobs.push_front(next);
-			//TODO update info about process
+            next->cpu_usage = ps.cpu_usage;
+            next->user_time = ps.user_time;
+			
+            s_struct->running_jobs.push_front(next);
+        
+        /* Resume old process */
 		} else {
 			kill(next->pid, SIGCONT);
-			debug("resumed");
-			s_struct->running_jobs.push_front(next);
+            
+            /* Update process stat */
+            Process_Stat ps = get_process_stat(next->pid);
+
+			next->state = ps.state;
+            next->pid = next->pid;
+        	next->start = getCurrentTime();
+            next->cpu_usage = ps.cpu_usage;
+			
+            s_struct->running_jobs.push_front(next);
 		}
 	}
+    
+    /* Update process stat for jobs in running */
+    for (auto &p : s_struct->running_jobs) {
+        Process_Stat ps = get_process_stat(p->pid);
+        p->cpu_usage = ps.cpu_usage;
+        p->state = ps.state;
+        p->user_time = ps.user_time;
+    }
 }
 
 
