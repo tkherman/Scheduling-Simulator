@@ -98,9 +98,7 @@ int server(int ncpu, Policy p, uint64_t time_slice, string IPC_path) {
                 perror("Server error receiving request");
             }
             
-            cout << buff << endl;
             string response = handle_request(string(buff));
-			cout << response << endl;
 
             if (send(s2, response.c_str(), response.size(), 0) < 0) {
                 perror("Server error sending response back to client");
@@ -119,8 +117,6 @@ int server(int ncpu, Policy p, uint64_t time_slice, string IPC_path) {
         if (sigprocmask(SIG_UNBLOCK, &mask, NULL) < 0) {
             perror("Error in sigprocmask");
         }
-
-        server_log("calling scheduler");
 	}
 
     return 0;

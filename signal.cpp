@@ -40,7 +40,7 @@ void sigchld_handler(int sig) {
         uint64_t total_r = s_struct->average_response * s_struct->process_finished + response;
 
         s_struct->process_finished++;
-
+        
         s_struct->average_turnaround = total_t / s_struct->process_finished;
         s_struct->average_response = total_r / s_struct->process_finished;
         
