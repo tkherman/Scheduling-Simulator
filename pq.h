@@ -83,6 +83,12 @@ struct Scheduler {
 
 extern struct Scheduler *s_struct;
 
+struct Process_Stat {
+    float cpu_usage;
+    float user_time;
+    string state;
+};
+
 
 int client(string client_request, string IPC_path);
 int server(int ncpu, Policy p, uint64_t time_slice, string IPC_path);
@@ -91,6 +97,6 @@ void schedule(uint64_t time_slice);
 void sigchld_handler(int sig);
 void sigint_handler(int sig);
 void empty_scheduler();
-float get_cpu_usage(pid_t pid); 
+Process_Stat get_process_stat(pid_t pid); 
 
 #endif

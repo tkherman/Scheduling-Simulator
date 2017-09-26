@@ -3,6 +3,7 @@
 #include "pq.h"
 
 #include <cstdlib>
+#include <csignal>
 #include <sys/types.h>
 #include <sys/wait.h>
 
@@ -15,8 +16,15 @@ void sigchld_handler(int sig) {
     int status;
 
     /* Detects all dead child process and clean up */
-    while ((p = waitpid(-1, &status, WNOHANG)) != -1) {
+    while ((p = waitpid(-1, &status, WNOHANG|WUNTRACED|WCONTINUED)) != -1) {
         
+        /* Check if SIGCHLD caused by SIGSTOP or SIGCONT */
+        debug(WIFSTOPPED(status));
+        /*if (WIFSTOPPED(status))
+            return;
+        if (WIFCONTINUED(status))
+            return;*/
+
         /* Access the Process struct of the process */
         Process *current_p = NULL;
 
@@ -44,6 +52,10 @@ void sigchld_handler(int sig) {
         s_struct->average_turnaround = total_t / s_struct->process_finished;
         s_struct->average_response = total_r / s_struct->process_finished;
         
+        /* Log death of child process */
+        server_log("Reaped process " << p << ": " << current_p->command << " Turnaround = "
+                    << turnaround/1000 << "ms, Response = " << response/1000 << "ms");
+        
         /* Free the Process struct */
         for (auto it = s_struct->running_jobs.begin(); it != s_struct->running_jobs.end(); it++) {
             if ((*it)->pid == p) {
@@ -52,11 +64,22 @@ void sigchld_handler(int sig) {
             }
             
         }
+
         delete current_p;
     }
     
     /* Call schedule function */
+    sigset_t mask;
+    sigemptyset(&mask);
+    sigaddset(&mask, SIGCHLD);
+
+    if (sigprocmask(SIG_BLOCK, &mask, NULL) < 0) {
+        perror("Error in sigprocmask");
+    }
     schedule(0);
+    if (sigprocmask(SIG_UNBLOCK, &mask, NULL) < 0) {
+        perror("Error in sigprocmask");
+    }
 }
 
 /* This signal handler detects SIGINT. It frees all allocated memory,
