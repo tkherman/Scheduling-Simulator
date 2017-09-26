@@ -80,7 +80,9 @@ int server(int ncpu, Policy p, uint64_t time_slice, string IPC_path) {
         
         /* Check if poll call failed */
         if (poll_result < 0) {
-            perror("poll() failed");
+            if (errno != EINTR) {
+                perror("poll() failed");
+            }
             continue;
         
         /* Check if there's a request from client */
