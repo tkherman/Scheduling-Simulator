@@ -58,11 +58,16 @@ enum Policy {
     MLFQ
 };
 
+struct MLFQ_level {
+    deque<Process*>         waiting_jobs;
+    deque<Process*>         running_jobs;
+}
+
 struct Scheduler {
     // use deque as queue, push_front() for push, pop_back() for pop
     deque<Process*>         waiting_jobs; 
     deque<Process*>         running_jobs;
-    vector<list<Process*>>  levels;
+    vector<MLFQ_level>      levels;
     Policy                  policy;
     int                     ncpu;
     uint64_t                last_called;
