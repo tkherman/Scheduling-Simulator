@@ -166,9 +166,87 @@ void rdrb() {
     }
 }
 
-
+/* this function simulates a multi-level feedback queue scheduler */
 void mlfq() {
-	debug("MLFQ");
+	
+	/* Preempt running processes */
+	while(!s_struct->running_jobs.empty()) {
+		/* access element from running jobs */
+		Process *p = s_struct->running_jobs.back();
+		s_struct->running_jobs.pop_back();
+
+		/* check if time allottment exceeded */
+		if (p->user_time > p->threshold) { 
+			if(p->level != s->MAX_LEVELS -1) 
+				p->level++;
+		}
+
+		/* pause process */
+		kill(p->pid, SIGSTOP);
+
+		/* add paused process to proper level queue */
+		s_struct->levels[p->level].push_front(p);
+	}
+
+	if isTimeForBoost() { //TODO - actually write this
+		for(int k=1; k<s_struct.MAX_LEVELS; k++) {
+			while(!s_struct->levels[k].empty()) {
+				/* Pop from current level and move to level 1 */
+				Process *p = s_struct->levels[k].back();
+				p->level = 0;
+				s_struct->levels[k].pop_back();
+				s_struct->levels[0].push_front(p);
+			}
+		}
+	}
+
+	/* move new processes to running */
+	for(int k-0; k<s_struct->MAX_LEVELS; k++) {
+		while(!s_struct->levels[k].empty() 
+				&& s_struct->running_jobs.size() < s_struct->ncpu) {
+			
+			Process *next = s_struct->levels[k].back();
+			s_struct->levels[k].pop_back();
+			
+			/* Start new process */
+			if(next->pid == 0) {
+				pid_t npid = run_process(next);
+				
+				/* bad process */
+				if (npid < 0) { 
+					delete next;
+					continue;
+				}
+
+				server_log("Started process " << npid << " " << next->command);
+
+				/* Update process stat */
+				Process_Stat ps = get_process_stat(npid);
+
+				next->state = ps.state;
+				next->pid = npid;
+				next->start = getCurrentTime();
+				next->cpu_usage = ps.cpu_usage;
+				next->user_time = ps.user_time;
+				
+				s_struct->running_jobs.push_front(next);
+			
+			/* Resume old process */
+			} else {
+				kill(next->pid, SIGCONT);
+				
+				/* Update process stat */
+				Process_Stat ps = get_process_stat(next->pid);
+
+				next->state = ps.state;
+				next->pid = next->pid;
+				next->cpu_usage = ps.cpu_usage;
+				
+				s_struct->running_jobs.push_front(next);
+			}
+
+		}
+	}
 }
 
 

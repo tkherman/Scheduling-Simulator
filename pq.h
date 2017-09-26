@@ -36,6 +36,7 @@ struct Process {
     string  state;
     int     user_time;
     int     threshold;
+	int 	level;
     float   cpu_usage;
     time_t  arrival;
     time_t  start;
@@ -46,6 +47,7 @@ struct Process {
         this->state = "sleeping";
         this->user_time = 0;
         this->threshold = 0;
+		this->level = 0;
         this->cpu_usage = 0.0;
         this->arrival = getCurrentTime();
         this->start = 0;
@@ -60,11 +62,12 @@ enum Policy {
 
 struct Scheduler {
     // use deque as queue, push_front() for push, pop_back() for pop
-    deque<Process*>         waiting_jobs; 
+    deque<Process*>         waiting_jobs; //not used in MLFQ
     deque<Process*>         running_jobs;
-    vector<list<Process*>>  levels;
+    vector<deque<Process*>> levels; //for MLFQ only
     Policy                  policy;
     int                     ncpu;
+	int						MAX_LEVELS;
     uint64_t                last_called;
     int                     process_finished;
     float                   average_turnaround;
