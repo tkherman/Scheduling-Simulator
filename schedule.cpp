@@ -143,7 +143,6 @@ void rdrb() {
         
         /* Resume old process */
 		} else {
-			kill(next->pid, SIGCONT);
             
             /* Update process stat */
             Process_Stat ps = get_process_stat(next->pid);
@@ -153,6 +152,7 @@ void rdrb() {
             next->cpu_usage = ps.cpu_usage;
 			
             s_struct->running_jobs.push_front(next);
+			kill(next->pid, SIGCONT);
 		}
 	}
     
