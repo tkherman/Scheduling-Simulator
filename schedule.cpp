@@ -6,50 +6,6 @@
 #include <signal.h>
 #include <fstream>
 
-float get_cpu_usage(pid_t pid) {
-    
-    /* Get system uptime */
-    float uptime;
-
-    string system_file = "/proc/uptime";
-    ifstream system_ifs(system_file, ifstream::in);
-    
-    if (!system_ifs.good()) return 0;
-
-    system_ifs >> uptime;
-    system_ifs.close();
-
-    /* Open stat file */
-    float utime, stime, starttime;
-
-    string filename = "/proc/" + to_string((int) pid) + "/stat";
-    debug(filename);
-    ifstream stat_ifs(filename, ifstream::in);
-
-    if (!stat_ifs.good()) {debug("hi");return 0;}
-    
-    string temp;
-    for (int i = 1; i <= 22; i++) {
-        stat_ifs >> temp;
-        cout << temp;
-        if (i == 14) utime = stof(temp);
-        else if (i == 15) stime = stof(temp);
-        else if (i == 22) starttime = stof(temp);
-    }
-    
-    debug(utime << "," << stime << "," << starttime);
-
-    stat_ifs.close();
-    
-
-    /* Calculate CPU usage */
-    float hertz = sysconf(_SC_CLK_TCK);
-    float total_time = utime + stime;
-    float seconds = uptime - (starttime / hertz);
-
-    return 100 * ((total_time/hertz) / seconds);
-}
-
 pid_t run_process(Process * next) {
 	
     /* Fork a new process */

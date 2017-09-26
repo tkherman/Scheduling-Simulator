@@ -91,5 +91,6 @@ void schedule(uint64_t time_slice);
 void sigchld_handler(int sig);
 void sigint_handler(int sig);
 void empty_scheduler();
+float get_cpu_usage(pid_t pid); 
 
 #endif
