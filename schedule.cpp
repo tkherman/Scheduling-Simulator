@@ -115,6 +115,7 @@ void rdrb() {
 			}
 			next->pid = npid;
         	next->start = getCurrentTime();
+        	next->cpu_usage = get_cpu_usage(npid);
 			s_struct->running_jobs.push_front(next);
 			//TODO update info about process
 		} else {
@@ -123,6 +124,11 @@ void rdrb() {
 			s_struct->running_jobs.push_front(next);
 		}
 	}
+    
+	/* Update usage for jobs in running */
+    for (auto &p : s_struct->running_jobs) {
+        p->cpu_usage = get_cpu_usage(p->pid);
+    }
 }
 
 
