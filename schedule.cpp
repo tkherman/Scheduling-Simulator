@@ -7,6 +7,10 @@
 #include <signal.h>
 #include <fstream>
 
+Process_Stat get_process_stat(pid_t pid);
+int determine_threshold(int user_time, int level);
+bool time_for_boost();
+
 pid_t run_process(Process * next) {
 	
     /* Fork a new process */
@@ -171,30 +175,39 @@ void mlfq() {
 	
 	/* Preempt running process */
 	if(!s_struct->running_jobs.empty()) {
-		/* access element from running jobs */
+		/* Access element from running jobs */
 		Process *p = s_struct->running_jobs.back();
 		s_struct->running_jobs.pop_back();
 
-		/* update user time and threshold info */
-		// TODO
+		/* Update user time */
+        Process_Stat ps = get_process_stat(p->pid);
 
-		/* check if time allottment exceeded */
+        p->state = ps.state;
+        p->cpu_usage = ps.cpu_usage;
+        p->user_time = ps.user_time;
+		
+
+		/* Check if time allottment exceeded */
 		if (p->user_time > p->threshold) { 
-			if(p->level != s->MAX_LEVELS -1) 
+			if(p->level != s_struct->MAX_LEVELS -1) 
 				p->level++;
+            /* Adjust threshold since time allottment has been exceeded */
+            p->threshold = determine_threshold(p->user_time, p->level);
 		}
+        
 
-		/* pause process */
+		/* Pause process */
 		kill(p->pid, SIGSTOP);
 
-		/* add paused process to proper level queue */
+		/* Add paused process to proper level queue */
 		s_struct->levels[p->level].push_front(p);
 	}
 
-	if isTimeForBoost() { //TODO - actually write this
-		for(int k=1; k<s_struct.MAX_LEVELS; k++) {
-			while(!s_struct->levels[k].empty()) {
-				/* Pop from current level and move to level 1 */
+    /* Apply priority boost */
+	if (time_for_boost()) {
+        for (int k = 1; k < s_struct->MAX_LEVELS; k++) {
+            while (!s_struct->levels[k].empty()) {
+				/* Pop from current level and move to level 0 */
 				Process *p = s_struct->levels[k].back();
 				p->level = 0;
 				s_struct->levels[k].pop_back();
@@ -203,10 +216,18 @@ void mlfq() {
 		}
 	}
 
-	/* move new processes to running */
-	for(int k=0; k<s_struct->MAX_LEVELS; k++) {
+    /* Move waiting to top priority level */
+    while (!s_struct->waiting_jobs.empty()) {
+        Process *p = s_struct->waiting_jobs.back();
+        p->level = 0;
+        s_struct->waiting_jobs.pop_back();
+        s_struct->levels[0].push_front(p);
+    }
+
+	/* Move new processes to running */
+	for(int k = 0; k < s_struct->MAX_LEVELS; k++) {
 		while(!s_struct->levels[k].empty() 
-				&& s_struct->running_jobs.size() < s_struct->ncpu) {
+				&& (int)s_struct->running_jobs.size() < s_struct->ncpu) {
 			
 			Process *next = s_struct->levels[k].back();
 			s_struct->levels[k].pop_back();
@@ -231,6 +252,8 @@ void mlfq() {
 				next->start = getCurrentTime();
 				next->cpu_usage = ps.cpu_usage;
 				next->user_time = ps.user_time;
+                next->level = k;
+                next->threshold = determine_threshold(next->user_time, next->level);
 				
 				s_struct->running_jobs.push_front(next);
 			
@@ -250,6 +273,25 @@ void mlfq() {
 
 		}
 	}
+
+    /* Update process stat for job */
+    for (auto &p : s_struct->running_jobs) {
+        Process_Stat ps = get_process_stat(p->pid);
+        p->cpu_usage = ps.cpu_usage;
+        p->state = ps.state;
+    }
+
+    for (int i = 0; i < s_struct->MAX_LEVELS; i++) {
+        if (!s_struct->levels[i].empty()) {
+            for (auto &p : s_struct->levels[i]) {
+                if (p->pid != 0) {
+                    Process_Stat ps = get_process_stat(p->pid);
+                    p->cpu_usage = ps.cpu_usage;
+                    p->state = ps.state;
+                }
+            }
+        }
+    }
 }
 
 
@@ -258,10 +300,10 @@ void mlfq() {
  * jobs accordingly by calling the respective function */
 void schedule(uint64_t time_slice) {
 	
-	/* compare time to last call time of scheduler */
+	/* Compare time to last call time of scheduler */
 	if(getCurrentTime() - time_slice < s_struct->last_called) return;
 
-	/* call proper scheduling function according to scheduling policy */
+	/* Call proper scheduling function according to scheduling policy */
 	switch(s_struct->policy) {
 		case FIFO:
 			fifo();
@@ -273,4 +315,8 @@ void schedule(uint64_t time_slice) {
 			mlfq();
 			break;
 	}
+
+    /* Update last_called */
+    s_struct->last_called = getCurrentTime();
+    return;
 }

@@ -66,11 +66,11 @@ Process_Stat get_process_stat(pid_t pid) {
 
     string filename = "/proc/" + to_string((int) pid) + "/stat";
     ifstream stat_ifs(filename, ifstream::in);
-
+    
     string temp;
     for (int i = 1; i <= 22; i++) {
         stat_ifs >> temp;
-        if (i == 3) state = temp;
+        if (i == 3) {state = temp; debug(state);}
         else if (i == 14) utime = stof(temp);
         else if (i == 15) stime = stof(temp);
         else if (i == 22) starttime = stof(temp);
@@ -94,11 +94,29 @@ Process_Stat get_process_stat(pid_t pid) {
         stat.state = "sleeping";
     else if (!state.compare("Z"))
         stat.state = "zombie";
-
+    else if (!state.compare("T"))
+        stat.state = "sleeping";
+    
     return stat;
 }
 
-//THINGS WE NEED TO GET FROM HERE
-// - CPU USAGE
-// - USER TIME
-// - STATE (RUNNING or NOT)
+int determine_threshold(int user_time, int level) {
+    
+    /* Calculate time allotment in jiffies */
+    int time_slice = s_struct->time_slice; // in microseconds
+    float time_allotment = time_slice/1000000.0 * (level + 1) * 0.5; // in seconds
+    debug(time_allotment);
+    
+    time_allotment = time_allotment * sysconf(_SC_CLK_TCK); // in jiffies
+
+    return user_time + time_allotment;
+}
+
+bool time_for_boost() {
+
+    if (getCurrentTime() < s_struct->next_time_boost)
+        return false;
+
+    s_struct->next_time_boost = getCurrentTime() + 4 * s_struct->MAX_LEVELS * s_struct->time_slice;
+    return true;
+}

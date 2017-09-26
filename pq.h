@@ -63,14 +63,15 @@ enum Policy {
 
 struct Scheduler {
     // use deque as queue, push_front() for push, pop_back() for pop
-    deque<Process*>         waiting_jobs; //not used in MLFQ
+    deque<Process*>         waiting_jobs;
     deque<Process*>         running_jobs;
     vector<deque<Process*>> levels; //for MLFQ only
     Policy                  policy;
     int                     ncpu;
 	int						MAX_LEVELS;
+    uint64_t                time_slice;
     uint64_t                last_called;
-	uint64_t				default_threshold;
+    uint64_t                next_time_boost;
     int                     process_finished;
     float                   average_turnaround;
     float                   average_response;
@@ -78,7 +79,10 @@ struct Scheduler {
     Scheduler() {
         this->policy = FIFO;
         this->ncpu = 1;
+        this->MAX_LEVELS = 4;
+        this->levels = vector<deque<Process*>>(this->MAX_LEVELS);
         this->last_called = getCurrentTime();
+        this->next_time_boost = getCurrentTime();
         this->process_finished = 0;
         this->average_turnaround = 0;
         this->average_response = 0;
@@ -102,6 +106,5 @@ void schedule(uint64_t time_slice);
 void sigchld_handler(int sig);
 void sigint_handler(int sig);
 void empty_scheduler();
-Process_Stat get_process_stat(pid_t pid); 
 
 #endif

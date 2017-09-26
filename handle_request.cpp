@@ -75,16 +75,56 @@ string waiting_jobs() {
 }
 
 string status_check() {
+    
     stringstream rs;
     
-    rs << "Running = " << s_struct->running_jobs.size() << ", Waiting = " << s_struct->waiting_jobs.size();
-    rs << ", Turnaround(ms) = " << s_struct->average_turnaround/1000 << ", Response(ms) = " << s_struct->average_response/1000 << endl;
-    rs << endl;
-    rs << "Running Queue:" << endl;
-    rs << running_jobs();
-    rs << endl;
-    rs << "Waiting Queue:" << endl;
-    rs << waiting_jobs();
+    if (s_struct->policy != MLFQ) {
+        
+        rs << "Running = " << s_struct->running_jobs.size() << ", Waiting = " << s_struct->waiting_jobs.size();
+        rs << ", Turnaround(ms) = " << s_struct->average_turnaround/1000 << ", Response(ms) = " << s_struct->average_response/1000 << endl;
+        rs << endl;
+        rs << "Running Queue:" << endl;
+        rs << running_jobs();
+        rs << endl;
+        rs << "Waiting Queue:" << endl;
+        rs << waiting_jobs();
+    
+    } else {
+        rs << "Running = " << s_struct->running_jobs.size() << ", Waiting = " << s_struct->waiting_jobs.size();
+        rs << ", Turnaround(ms) = " << s_struct->average_turnaround/1000 << ", Response(ms) = " << s_struct->average_response/1000 << endl;
+        rs << endl;
+        rs << "Running Queue:" << endl;
+        rs << running_jobs();
+        rs << endl;
+        
+        for (int i = 0; i < s_struct->MAX_LEVELS; i++) {
+            if (!s_struct->levels[i].empty()) {
+                rs << "Level " << i << ":" << endl; 
+                rs << setw(5) << "PID";
+                rs << setw(25) << "COMMAND";
+                rs << setw(10) << "STATE";
+                rs << setw(10) << "USER";
+                rs << setw(10) << "THRESHOLD";
+                rs << setw(8) << "USAGE";
+                rs << setw(15) << "ARRIVAL";
+                rs << setw(15) << "START";
+                rs << endl;
+                for (auto &p : s_struct->levels[i]) {
+                    rs << setw(5) << p->pid;
+                    rs << setw(25) << p->command;
+                    rs << setw(10) << p->state;
+                    rs << setw(10) << p->user_time;
+                    rs << setw(10) << p->threshold;
+                    rs << setw(8) << setprecision(2) << p->cpu_usage;
+                    rs << setw(15) << p->arrival/10000000;
+                    rs << setw(15) << p->start/10000000;
+                    rs << endl;
+                }
+            }
+            rs << endl;
+        } 
+        
+    }
 
     return rs.str();
 }

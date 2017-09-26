@@ -72,6 +72,7 @@ int server(int ncpu, Policy p, uint64_t time_slice, string IPC_path) {
     /* Initialize schduler struct */
     s_struct->ncpu = ncpu;
     s_struct->policy = p;
+    s_struct->time_slice = time_slice;
    
     /* Create unix domain socket for listening */
     s = set_up_socket(remote, IPC_path);
