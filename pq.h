@@ -67,8 +67,8 @@ struct Scheduler {
     int                     ncpu;
     uint64_t                last_called;
     int                     process_finished;
-    uint64_t                average_turnaround;
-    uint64_t                average_response;
+    float                   average_turnaround;
+    float                   average_response;
 
     Scheduler() {
         this->policy = FIFO;

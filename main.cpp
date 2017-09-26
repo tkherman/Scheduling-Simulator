@@ -71,7 +71,7 @@ int main(int argc, char *argv[]) {
             if (argind < argc) {
                 client_request = arg + " " + argv[argind++];
                 while (argind < argc)
-                    client_request += argv[argind++];
+                    client_request = client_request + " " + argv[argind++];
                 is_server = false;
             } else {
                 log("Error: add requires a COMMAND");

@@ -4,48 +4,90 @@
 #include <unistd.h>
 #include <cstring>
 #include <signal.h>
+#include <fstream>
 
+float get_cpu_usage(pid_t pid) {
+    
+    /* Get system uptime */
+    float uptime;
+
+    string system_file = "/proc/uptime";
+    ifstream system_ifs(system_file, ifstream::in);
+    
+    if (!system_ifs.good()) return 0;
+
+    system_ifs >> uptime;
+    system_ifs.close();
+
+    /* Open stat file */
+    float utime, stime, starttime;
+
+    string filename = "/proc/" + to_string((int) pid) + "/stat";
+    debug(filename);
+    ifstream stat_ifs(filename, ifstream::in);
+
+    if (!stat_ifs.good()) {debug("hi");return 0;}
+    
+    string temp;
+    for (int i = 1; i <= 22; i++) {
+        stat_ifs >> temp;
+        cout << temp;
+        if (i == 14) utime = stof(temp);
+        else if (i == 15) stime = stof(temp);
+        else if (i == 22) starttime = stof(temp);
+    }
+    
+    debug(utime << "," << stime << "," << starttime);
+
+    stat_ifs.close();
+    
+
+    /* Calculate CPU usage */
+    float hertz = sysconf(_SC_CLK_TCK);
+    float total_time = utime + stime;
+    float seconds = uptime - (starttime / hertz);
+
+    return 100 * ((total_time/hertz) / seconds);
+}
 
 pid_t run_process(Process * next) {
-	/* fork a new process */
+	
+    /* Fork a new process */
 	pid_t id = fork();
 	
-	if(id > 0) {
-
+	if(id > 0) { // Parent
 
 		return id;
+        
+	} else if (id == 0) { // Child
 
-	} else if (id == 0) { //child process
-		/* manually create non-const c string */
+		/* Manually create non-const c string */
 		char cmd[next->command.size()+1];
 		size_t length = next->command.copy(cmd, next->command.size());
 		cmd[length] = '\0';
 
-		/* parse command string */
+		/* Parse command string into char*[] */
 		char * arglist[20];
 		char * arg = strtok(cmd, " ");
 		int k=0;
 		while(arg != NULL) {
 			arglist[k++] = arg;
 			arg = strtok(NULL, " ");
-			debug(arg);
 		}
 		arglist[k] = NULL;
 		
 
-		/* execute the command */
+		/* Execute the command */
 		server_log("about to exec");
 		cout << arglist[0] << endl;
 		if(execvp(arglist[0], arglist) < 0) {
-			server_log("exec failed");
-			//TODO check what do do on error (i.e. with deallocation)
-			_exit(EXIT_FAILURE);
+			server_log("Error: exec failed");
+			return -1;
 		}
-		debug("here");
 
 		
 	} else { // fork failed
-		server_log("Fork failed");
+		server_log("Error: fork failed");
         return -1;
 	}
 
@@ -54,9 +96,8 @@ pid_t run_process(Process * next) {
 }
 
 void fifo() {
-	debug("entered fifo scheduler");
-	
-	while(int(s_struct->running_jobs.size()) < s_struct->ncpu) {
+	/* Move jobs to running queue if there's free cpu */
+    while(int(s_struct->running_jobs.size()) < s_struct->ncpu) {
 		
 		if(s_struct->waiting_jobs.empty())
 			break;
@@ -68,18 +109,26 @@ void fifo() {
         /* Create a new process */
 		pid_t new_pid = run_process(next);
 
-		/* If new_pid is -1, handle error. Else, update Process struct */
+		/* If new_pid is -1, delete the process struct
+         * Else, update Process struct */
         if (new_pid == -1) {
+            delete next;
             continue;
         }
 
         next->state = "running";
 		next->pid = new_pid;
         next->start = getCurrentTime();
-        // get usage
+        next->cpu_usage = get_cpu_usage(new_pid);
 
 		s_struct->running_jobs.push_front(next);
 	}
+
+    /* Update usage for jobs in running */
+    for (auto &p : s_struct->running_jobs) {
+        p->cpu_usage = get_cpu_usage(p->pid);
+    }
+
 }
 
 void rdrb() {

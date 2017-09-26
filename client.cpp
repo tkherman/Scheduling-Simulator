@@ -31,6 +31,7 @@ int client(string client_request, string IPC_path) {
     }
 
     client_log("Successfully connected to server...");
+
     
     /* Send request to server */
     if (send(s, client_request.c_str(), client_request.size(), 0) == -1) {
