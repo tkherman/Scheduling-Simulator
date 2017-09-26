@@ -16,14 +16,12 @@ void sigchld_handler(int sig) {
     int status;
 
     /* Detects all dead child process and clean up */
-    while ((p = waitpid(-1, &status, WNOHANG|WUNTRACED|WCONTINUED)) != -1) {
+    while ((p = waitpid(-1, &status, WNOHANG)) != -1) {
         
-        /* Check if SIGCHLD caused by SIGSTOP or SIGCONT */
-        debug(WIFSTOPPED(status));
-        /*if (WIFSTOPPED(status))
-            return;
-        if (WIFCONTINUED(status))
-            return;*/
+        /* Waitpid returns 0 if parent process has children that haven't changed state */ 
+        if (p == 0) {
+            break;
+        }
 
         /* Access the Process struct of the process */
         Process *current_p = NULL;

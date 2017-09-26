@@ -54,7 +54,15 @@ int server(int ncpu, Policy p, uint64_t time_slice, string IPC_path) {
     
     /* Signal handling */
     signal(SIGINT, sigint_handler);
-    signal(SIGCHLD, sigchld_handler);
+    
+    struct sigaction sa;
+    sa.sa_handler = &sigchld_handler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = SA_RESTART | SA_NOCLDSTOP;
+    if (sigaction(SIGCHLD, &sa, 0) == -1) {
+        perror(0);
+        exit(EXIT_FAILURE);
+    }
 
     int s, s2;
     socklen_t t;

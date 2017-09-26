@@ -60,6 +60,7 @@ enum Policy {
     MLFQ
 };
 
+
 struct Scheduler {
     // use deque as queue, push_front() for push, pop_back() for pop
     deque<Process*>         waiting_jobs; //not used in MLFQ

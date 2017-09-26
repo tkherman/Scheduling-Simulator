@@ -143,7 +143,6 @@ void rdrb() {
         
         /* Resume old process */
 		} else {
-			kill(next->pid, SIGCONT);
             
             /* Update process stat */
             Process_Stat ps = get_process_stat(next->pid);
@@ -153,6 +152,7 @@ void rdrb() {
             next->cpu_usage = ps.cpu_usage;
 			
             s_struct->running_jobs.push_front(next);
+			kill(next->pid, SIGCONT);
 		}
 	}
     
@@ -169,11 +169,14 @@ void rdrb() {
 /* this function simulates a multi-level feedback queue scheduler */
 void mlfq() {
 	
-	/* Preempt running processes */
-	while(!s_struct->running_jobs.empty()) {
+	/* Preempt running process */
+	if(!s_struct->running_jobs.empty()) {
 		/* access element from running jobs */
 		Process *p = s_struct->running_jobs.back();
 		s_struct->running_jobs.pop_back();
+
+		/* update user time and threshold info */
+		// TODO
 
 		/* check if time allottment exceeded */
 		if (p->user_time > p->threshold) { 
