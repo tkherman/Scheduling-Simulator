@@ -211,6 +211,21 @@ Extra Credit
 ------------
 
 > Describe what extra credit (if any) that you implemented.
+>
+>   For the extra credit, we did both protocol and multiple clients. In order to
+>   acheive them, we made changes to our client.cpp and server.cpp.
+>
+>   For the client.cpp, we modified it so that after the initial request sent to
+>   the server, the client will keep the socket connection and continuously
+>   prompt user to input further request. When the user is done, he/she simply
+>   has to type exit to close the connection.
+>
+>   For the server.cpp, we extended the poll() call to poll on the listening
+>   socket and file descriptors of existing connected clients. All the file
+>   descriptors are stored in a vector of which the underlying array structure
+>   is passed to the poll() call. In addition, the poll() also poll for the
+>   closing of existing connection usuing POLLHUP. This way, closed conncetion
+>   can be removed from the vector.
 
 
 
