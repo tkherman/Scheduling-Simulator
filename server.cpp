@@ -12,6 +12,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <csignal>
+#include <vector>
 
 
 /* This function sets up a listen socket and returns to main server function */
@@ -80,12 +81,15 @@ int server(int ncpu, Policy p, uint64_t time_slice, string IPC_path) {
 	server_log("Waiting for connections from client...");
 
     /* Set up pollfd for poll() call */
-    struct pollfd pfds = {s, POLLIN, 0};
+    vector<struct pollfd> pfds;
+    struct pollfd sock = {s, POLLIN, 0};
+    pfds.push_back(sock);
+
 
 	/* Loop to wait for connections */
 	while(1) {
 		
-        int poll_result = poll(&pfds, 1, time_slice/1000);
+        int poll_result = poll(pfds.data(), pfds.size(), time_slice/1000);
         
         /* Check if poll call failed */
         if (poll_result < 0) {
@@ -96,24 +100,70 @@ int server(int ncpu, Policy p, uint64_t time_slice, string IPC_path) {
         
         /* Check if there's a request from client */
         } else if (poll_result > 0) {
-            t = sizeof(remote);
-            if((s2 = accept(s, (struct sockaddr *)&remote, &t)) == -1) {
-                perror("Failed to accept");
-                exit(EXIT_FAILURE);
-            }
-            server_log("Taking request from a client...");
             
-			memset(&buff, 0, sizeof(buff));
-            int bytes_recvd = recv(s2, buff, BUFSIZ, 0);
-            if (bytes_recvd < 0) {
-                perror("Server error receiving request");
-            }
-            
-            string response = handle_request(string(buff));
+            /* New client connection coming in */
+            if (pfds[0].revents == POLLIN) {
+                t = sizeof(remote);
+                if((s2 = accept(s, (struct sockaddr *)&remote, &t)) == -1) {
+                    perror("Failed to accept");
+                    exit(EXIT_FAILURE);
+                }
+                server_log("New client connected...");
+                server_log("Taking request from a client...");
+                
+                memset(&buff, 0, sizeof(buff));
+                int bytes_recvd = recv(s2, buff, BUFSIZ, 0);
+                if (bytes_recvd < 0) {
+                    perror("Server error receiving request");
+                }
+                
+                string response = handle_request(string(buff));
 
-            if (send(s2, response.c_str(), response.size(), 0) < 0) {
-                perror("Server error sending response back to client");
+                if (send(s2, response.c_str(), response.size(), 0) < 0) {
+                    perror("Server error sending response back to client");
+                }
+                
+                /* Add new descriptor to pfds */
+                struct pollfd new_client = {s2, POLLIN|POLLHUP, 0};
+                pfds.push_back(new_client);
             }
+
+            /* Check existing connected clients for new request */
+            if (pfds.size() > 1) {
+                
+                vector<vector<struct pollfd>::iterator> fd_to_delete;
+
+                for (auto it = pfds.begin() + 1; it != pfds.end(); it++) {
+                    /* Client hangs up, add to fd to delete */
+                    if (it->revents & POLLHUP) {
+                        fd_to_delete.push_back(it);
+                        server_log("A client is hanging up...");
+                    }
+                    
+                    /* Existing client sends new request */
+                    else if (it->revents && POLLIN) {
+                        server_log("Taking request from a client...");
+                        
+                        memset(&buff, 0, sizeof(buff));
+                        int bytes_recvd = recv(it->fd, buff, BUFSIZ, 0);
+                        if (bytes_recvd < 0) {
+                            perror("Server error receiving request");
+                        }
+
+                        string response = handle_request(string(buff));
+                        
+                        if (send(it->fd, response.c_str(), response.size(), 0) < 0) {
+                            perror("Server error sending response back to client");
+                        }
+                        
+                    }
+                }
+
+                /* Remove dead connections from pfds */
+                for (auto &dit : fd_to_delete)
+                    pfds.erase(dit);
+            }
+
         }
 
         /* Call scheduler after polling, block SIGCHLD when calling schedule */

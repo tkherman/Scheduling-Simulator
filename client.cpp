@@ -6,6 +6,7 @@
 #include <sys/un.h>
 #include <cstdio>
 #include <cstdlib>
+#include <unistd.h>
 
 int client(string client_request, string IPC_path) {
     
@@ -32,28 +33,37 @@ int client(string client_request, string IPC_path) {
 
     client_log("Successfully connected to server...");
 
-    
-    /* Send request to server */
-    if (send(s, client_request.c_str(), client_request.size(), 0) == -1) {
-        perror("Error in client sending request...");
-        exit(EXIT_FAILURE);
-    }
+    while (true) {
+        /* Send request to server */
+        if (send(s, client_request.c_str(), client_request.size(), 0) == -1) {
+            perror("Error in client sending request...");
+            exit(EXIT_FAILURE);
+        }
 
-    /* Print out response from server */
-    bool done = false;
-    while (!done) {
-        if ((t = recv(s, str, BUFSIZ, 0)) > 0) {
-            str[t] = '\0';
-            cout << str << endl;
-            done = true;
-        } else {
-            if (t < 0) {
-                perror ("Error in receiving server response...");
-                exit(EXIT_FAILURE);
-            } else {
-                client_log("Request sent and handled");
+        /* Print out response from server */
+        bool done = false;
+        while (!done) {
+            if ((t = recv(s, str, BUFSIZ, 0)) > 0) {
+                str[t] = '\0';
+                cout << str << endl;
                 done = true;
+            } else {
+                if (t < 0) {
+                    perror ("Error in receiving server response...");
+                    exit(EXIT_FAILURE);
+                } else {
+                    client_log("Request sent and handled");
+                    done = true;
+                }
             }
+        }
+
+        cout << "command > ";
+        getline(cin, client_request);
+
+        if (!client_request.compare("exit")){
+            close(s);
+            break;
         }
     }
 
