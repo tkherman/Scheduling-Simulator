@@ -70,6 +70,7 @@ Process_Stat get_process_stat(pid_t pid) {
     string temp;
     for (int i = 1; i <= 22; i++) {
         stat_ifs >> temp;
+		if(stat_ifs.eof()) break;
         if (i == 3) state = temp;
         else if (i == 14) utime = stof(temp);
         else if (i == 15) stime = stof(temp);
@@ -116,6 +117,6 @@ bool time_for_boost() {
     if (getCurrentTime() < s_struct->next_time_boost)
         return false;
 
-    s_struct->next_time_boost = getCurrentTime() + 4 * s_struct->MAX_LEVELS * s_struct->time_slice;
+    s_struct->next_time_boost = getCurrentTime() + 2 * s_struct->MAX_LEVELS * s_struct->time_slice;
     return true;
 }
