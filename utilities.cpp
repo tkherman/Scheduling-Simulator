@@ -8,6 +8,7 @@
 #include <cstring>
 #include <signal.h>
 #include <fstream>
+#include <stdexcept>
 
 uint64_t getCurrentTime() {
 	/* get current time in microseconds */
@@ -51,6 +52,11 @@ Process_Stat get_process_stat(pid_t pid) {
     
     Process_Stat stat;
 
+    /* Fill struct with defaults */
+    stat.cpu_usage = 0;
+    stat.user_time = 0;
+    stat.state = "sleeping";
+
     /* Get system uptime */
     float uptime;
 
@@ -70,10 +76,27 @@ Process_Stat get_process_stat(pid_t pid) {
     string temp;
     for (int i = 1; i <= 22; i++) {
         stat_ifs >> temp;
-        if (i == 3) state = temp;
-        else if (i == 14) utime = stof(temp);
-        else if (i == 15) stime = stof(temp);
-        else if (i == 22) starttime = stof(temp);
+		if (i == 3) {
+			state = temp;
+        } else if (i == 14) {
+			try {
+				utime = stof(temp);
+			} catch (invalid_argument& ia) {
+				return stat;
+			}
+        } else if (i == 15) {
+			try {
+				stime = stof(temp);
+			} catch (invalid_argument& ia) {
+				return stat;
+			}
+        } else if (i == 22) {
+			try {
+				starttime = stof(temp);
+			} catch (invalid_argument& ia) {
+				return stat;
+			}
+		}
     }
     
     stat_ifs.close();

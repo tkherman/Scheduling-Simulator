@@ -6,6 +6,8 @@
 #include <iomanip>
 #include <csignal>
 
+Process_Stat get_process_stat(pid_t pid);
+
 /* Allocate a new Process struct and fill in initialize info */
 string add_job(string command){
     Process *new_p = new Process(command);
@@ -32,6 +34,13 @@ string running_jobs() {
     rs << setw(15) << "START";
     rs << endl;
     for (auto &p : s_struct->running_jobs) {
+
+		/* Update user, state and cpu_usage*/
+        Process_Stat stat = get_process_stat(p->pid);
+        p->user_time = stat.user_time;
+        p->cpu_usage = stat.cpu_usage;
+        p->state = stat.state;
+
         rs << setw(5) << p->pid;
         rs << setw(25) << p->command;
         rs << setw(10) << p->state;
@@ -59,6 +68,13 @@ string waiting_jobs() {
     rs << setw(15) << "START";
     rs << endl;
     for (auto &p : s_struct->waiting_jobs) {
+
+		/* Update user, state and cpu_usage*/
+        Process_Stat stat = get_process_stat(p->pid);
+        p->user_time = stat.user_time;
+        p->cpu_usage = stat.cpu_usage;
+        p->state = stat.state;
+
         rs << setw(5) << p->pid;
         rs << setw(25) << p->command;
         rs << setw(10) << p->state;
@@ -110,6 +126,13 @@ string status_check() {
                 rs << setw(15) << "START";
                 rs << endl;
                 for (auto &p : s_struct->levels[i]) {
+
+					/* Update user, state and cpu_usage*/
+                    Process_Stat stat = get_process_stat(p->pid);
+                    p->user_time = stat.user_time;
+                    p->cpu_usage = stat.cpu_usage;
+                    p->state = stat.state;
+
                     rs << setw(5) << p->pid;
                     rs << setw(25) << p->command;
                     rs << setw(10) << p->state;
