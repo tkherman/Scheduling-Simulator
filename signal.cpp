@@ -75,7 +75,7 @@ void sigchld_handler(int sig) {
         
         for (auto it = s_struct->waiting_jobs.begin(); it != s_struct->waiting_jobs.end(); it++) {
             if ((*it)->pid == p) {
-                s_struct->running_jobs.erase(it);
+                s_struct->waiting_jobs.erase(it);
                 break;
             }
             
