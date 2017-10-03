@@ -53,7 +53,13 @@ int set_up_socket(sockaddr_un &remote, string IPC_path) {
 int server(int ncpu, Policy p, uint64_t time_slice, string IPC_path) {
     
     /* Signal handling */
-    signal(SIGINT, sigint_handler);
+    struct sigaction int_action;
+    int_action.sa_handler = &sigint_handler;
+    sigemptyset(&int_action.sa_mask);
+    if (sigaction(SIGINT, &int_action, 0) == -1) {
+        perror(0);
+        exit(EXIT_FAILURE);
+    }
     
     struct sigaction sa;
     sa.sa_handler = &sigchld_handler;
