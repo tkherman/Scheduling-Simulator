@@ -34,6 +34,16 @@ void sigchld_handler(int sig) {
         }
         
         if (current_p == NULL) {
+            for (auto &pt : s_struct->waiting_jobs) {
+                if (pt->pid == p) {
+                    current_p = pt;
+                    break;
+                }
+            }
+        }
+
+        
+        if (current_p == NULL) {
             server_log("Death of child process became a mystery");
             return;
         }
@@ -56,6 +66,14 @@ void sigchld_handler(int sig) {
         
         /* Free the Process struct */
         for (auto it = s_struct->running_jobs.begin(); it != s_struct->running_jobs.end(); it++) {
+            if ((*it)->pid == p) {
+                s_struct->running_jobs.erase(it);
+                break;
+            }
+            
+        }
+        
+        for (auto it = s_struct->waiting_jobs.begin(); it != s_struct->waiting_jobs.end(); it++) {
             if ((*it)->pid == p) {
                 s_struct->running_jobs.erase(it);
                 break;

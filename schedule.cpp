@@ -110,8 +110,6 @@ void rdrb() {
 		s_struct->waiting_jobs.push_front(to_stop);
 		s_struct->running_jobs.pop_back();
 		
-		/* Signal process to stop */
-		//kill(to_stop->pid, SIGSTOP);
 	}
 	
     /* Move process from waiting queue to running queue */
@@ -130,7 +128,7 @@ void rdrb() {
             pid_t npid = run_process(next);
 			
             if (npid < 0) { 
-				delete next;
+                delete next;
                 continue;
 			}
 
