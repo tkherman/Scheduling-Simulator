@@ -25,33 +25,33 @@ Design
 >
 >   - What sort of **accounting** with you need to keep track of for each
 >     **Process**?
->       - we need to keep track of the pid, command, state, user, threshold, cpu
->         usage, arrival time and start time
->       - to do the above, we will create a struct for each process that holds
->         all the information listed
+		- We need to keep track of the pid, command, state, user time, threshold,
+		  cpu usage, arrival time, and start time for each process.  To do so, we
+		  created a process struct that holds all the above information.
 >
 >   - How will you compute the turnaround and response times for each
 >     **Process**?
->       - we have to keep track of the time that all jobs arrive, start and
->         finish
->       - for each process, we will compute the turnaround time when the job
->         finishes and the response time when the job starts
+		- To calculate the turnaround and response times, we have to keep track
+		  of when each job arrives, starts, and finishes.  We will compute the
+		  response time (start time - arrival time) when a job starts and the
+		  turnarount time (finish time - arrival time) when a job finishes.
 >
 >   - What information do you need to store in the **Scheduler**?  How will it
 >     maintain a running and waiting queue?
->       - queue for waiting jobs
->       - FIFO
->           - keep track of number of running jobs
->       - Round Robin
->           - a running queue
->       - MLFQ
->           - a vector of queues where the index of is the level and the queue
->             is just like a queue in Round Robin
->
+		- In the Scheduler, we need to store a queue for waiting jobs and a queue
+		  for running jobs.  Exactly how this works depends on the scheduling
+		  policy.  For both FIFO and Round Robin, the waiting queue simply
+		  stores jobs that are waiting to be run and the running queue stores
+		  running jobs.  For MLFQ, the waiting queue only holds the jobs that
+		  have yet to start, and the running queue works the same.  However, for
+		  MLFQ, there is also a vector of queues to keep track of the jobs on
+		  each priority level.
+		  
 >   - How will you compute the average turnaround and response times for the
 >     whole process queue?
->       - have two variables that keeps track of the average turaround and
->         repsonse times that we constantly update when a job starts or finishes
+>       - We have variables that keep track of the turaround and repsonse 
+		  as well as the number of processes considered.  We update the average
+		  times when a job starts or finishes.
 
 Response.
 
@@ -60,13 +60,14 @@ Response.
 >    a consistent logging mechanism that includes timestamps.
 >
 >   - How will you go about logging information in your program?
->       - we will use a macro to print the information below to the stdout
+>       - We will use a macro to print the information below to the stdout when
+		  logging.  We will also use another macro to aid with debugging.
 >
 >   - What sort of information will you log?
->       - for each loggin message, we will include a timestamp, description of
->         the action, the pid and the command that's being run
->       - when a process finishes, we will also log the turnaround and response
->         time
+>       - For each loggin message, we will include a timestamp, a description of
+>         the action, the pid and the command that's being run.
+>       - When a process finishes, we will also log the turnaround and response
+>         times.
 
 Response.
 
@@ -79,23 +80,23 @@ Response.
 >       since that creates two processes and you would only have direct control
 >       of `/bin/sh` rather than `command`
 >
->       - we will be using fork/exec/wait and will get the pid of the new 
-        process from fork()
+>       - We will be using fork/exec/wait and will get the pid of the new 
+          process from fork().
 >
 >   - How will you implement preemption?  That is, how will you **stop** or
 >     **pause** a running process?
->       - we would send SIGSTOP signal to the process to pause it
+>       - We will send the SIGSTOP signal to the process to pause it.
 >
 >   - How will you **resume** a process that has been preempted?
->       - to resume, we will send SIGCONT to the process
+>       - To resume a paused process, we will send it the SIGCONT signal.
 >
 >   - How will you **terminate** an active process?
->       - send a SIGTERM signal
+>       - To terminate an active process, we will send it the SIGTERM signal.
 >
 >   - How will you gather statistics or accounting information about each
 >     process?  What will you store?
->       - for the CPU usage, we will open the /proc/{pid}/stat file and parse it
->         to calculate the %CPU usage
+>       - We will open the /proc/{pid}/stat file and parse it to calculate
+> 		  the user time, CPU usage, and state of the process.  
 >
 >       [Hint](https://stackoverflow.com/questions/16726779/how-do-i-get-the-total-cpu-usage-of-an-application-from-proc-pid-stat)
 
@@ -107,10 +108,10 @@ Response.
 >   - How will you trigger your scheduler when a process dies?  What must
 >     happen when a process dies (consider both the **Scheduler** and the
 >     **Process**)?
->       - use SIGCHLD to detect if a process dies, then use sigaction to call a
->         handler that calls waitpid() to find out which process died
->       - the process struct will be removed and the scheduler will have to
->         decide what process will be run next
+>       - We will write a function that handles SIGCHLD to detect if a process 
+>		  dies, then use sigaction to call a handler that calls waitpid() to 
+>		  find out which process has died. The process struct will be removed 
+>		  and the scheduler will have to decide what process to run next.
 >
 >   - How will you ensure your scheduler runs periodically after a time slice
 >     has expired?
@@ -125,14 +126,13 @@ Response.
 >    model.
 >
 >   - Which IPC mechanism will you use: named pipes or unix domain sockets?
->       - we think unix domain sockets is the choice because it allows
->         bi-directional communications where as named pipes only allow one
->         direction communication which means we have to create two separate
->         pipes
+>       - We think unix domain sockets is the better choice because they allow
+>         bi-directional communication whereas named pipes only allow one-way
+>         communication which means we would have to create two separate pipes.
 >
 >   - How will you utilize this IPC mechanism?
->       - we can use this with poll() to detect if client is sending any new
->         processes 
+>       - We will use this with poll() to detect if client is sending any new
+>         processes.
 >
 >       Note: you may wish to consider this response in light of your answer in
 >       question 6.
@@ -143,21 +143,19 @@ Response.
 >    from clients.
 >
 >   - How will you multiplex I/O and computation?
->       - we will use poll() to check if there's anything to process in the UNIX
->         domain sockets
->       - when there's something, we will process such request. otherwise, we
->         will continue with the scheduling duties
+>       - We will use poll() to check if there's anything to process with the UNIX
+>         domain sockets. When there is something to process, we will handle the
+>		  request; otherwise, we'll continue with the scheduling.
 >
 >   - How will you ensure that your I/O will not block indefinitely?
->       - we will set a timeout for the poll() call so that it would not block
->         indefinitely
+>       - We will set a timeout for the poll() call so that it would not block
+>         indefinitely.
 >
 >   - How will you allow events such as a child process dying interrupt your
 >     I/O, but block such an event from interrupting your normal scheduling
 >     functions?  Why would this be necessary?
->       - when performing scheduling functions, we will use
->         sigprocmask(SIG_BLOKC) to block and unblock when performing the
->         schduling function
+>       - When performing scheduling functions, we will use sigprocmask(SIG_BLOKC) 
+>		  to block and unblock.
 
 Response.
 
@@ -166,34 +164,25 @@ Response.
 >
 >   - How will you perform preemption?  What happens to a process when it is
 >     prempted?
->       - in the event loop, use the poll() timer to as the time slice timer so
->           - the issue may be if client keeps sending jobs, the scheduler may
->             be called repeatedly but that is ok i guess
->           - perhaps we can keep track of when the scheduler is last called
->       - when a process is preempted, it will be paused
->           - for Round Robin, this process simply goes to the back of the
->             waiting queue
->           - for MLFQ, the process priority will be lowered then the scheduler
->             will decide what will be running next depending on the priority
->             table
+>       - In the event loop, we will use the poll() timer to as the time slice 
+>		  timer.  We will preempt a process by sending it the SIGSTOP signal.
+>       - When a process is preempted, it will be paused.
+>           - For Round Robin, this process simply goes to the back of the
+>             waiting queue.
+>           - For MLFQ, the process priority will be lowered if it has used up
+>			  its entire time slice, then the scheduler will decide what will 
+>			  run next depending on the priority table.
 >
 >   - How will MLFQ determine if a process needs to be lowered in priority?
 >     What information must be tracked and how it be updated?
->       - we would have to determine if a process is I/O heavy
->           - this means that we would have to keep track of the time the
->             process spends in user mode as opposed to kernel mode.
->           - using this we along with the time slices we can determine if the
->             process is I/O heavy
->       - if process is I/O heavy, we will keep it at high priority.
->       - otherwise, we will lower the priority of a process after each time
->         slice
->       - we will use a variable threshold to keep track of how much alloted the
->         process has used. this would involve keep track of the time the
->         process spends on user mode and deduct that from the threshold.
->       - once a process uses all its alloted time, it will be demoted
+>       - We will have to determine if a process is I/O heavy.  In other words,
+>		  this means that we will have to keep track of the time a process spends 
+>		  in user mode as opposed to kernel mode.  We get this information by
+>		  parsing the /proc/[PID]/stat file.  With this information, we can
+>		  calculate if a process's priority level needs to be lowered.
 >
 >   - How will MFLQ determine if a priority boost is required?
->       - after a certain number of time slices or cpu cycles, boost everything
+>       - After a certain number of time slices we boost every process to level 1.
 
 Response.
 
