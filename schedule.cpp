@@ -105,11 +105,13 @@ void rdrb() {
     /* Move a process from running queue to waiting queue */
 	while(s_struct->running_jobs.size()) {
 		Process * to_stop = s_struct->running_jobs.back();
+		/* Signal process to stop */
+		kill(to_stop->pid, SIGSTOP);
 		s_struct->waiting_jobs.push_front(to_stop);
 		s_struct->running_jobs.pop_back();
 		
 		/* Signal process to stop */
-		kill(to_stop->pid, SIGSTOP);
+		//kill(to_stop->pid, SIGSTOP);
 	}
 	
     /* Move process from waiting queue to running queue */
