@@ -101,6 +101,7 @@ void sigchld_handler(int sig) {
 /* This signal handler detects SIGINT. It frees all allocated memory,
  * kill all running processes and exit the program */
 void sigint_handler(int sig) {
+
     empty_scheduler();
 
     delete s_struct;
