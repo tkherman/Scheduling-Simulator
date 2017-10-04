@@ -190,6 +190,7 @@ Demonstration
 -------------
 
 > Place a link to your demonstration slides on [Google Drive].
+[Link to Slides](https://docs.google.com/a/nd.edu/presentation/d/10X8oyy0si9cJaw_UySiUnRbEaJ5hLaGHmB-ZzByEy00/edit?usp=sharing)
 
 Errata
 ------
